@@ -1,6 +1,8 @@
 package com.mycompany.engineup;
 
+import com.jcraft.jsch.JSchException;
 import io.fabric8.kubernetes.api.model.HasMetadata;
+import io.fabric8.kubernetes.api.model.Pod;
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.Configuration;
@@ -20,6 +22,8 @@ import io.fabric8.kubernetes.client.utils.Serialization;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.typesense.api.Client;
 
 public class Program {
@@ -82,10 +86,23 @@ public class Program {
         
             out(serializeSearchResult(searchResults));
             
-            // Backup typesense.
-            builder = new StringBuilder();
-            backupTypesense(builder);
-            out(builder.toString());
+//            // Backup typesense.
+//            builder = new StringBuilder();
+//            boolean success = backupTypesense(builder);
+//            out(builder.toString());
+            
+//            if (success) {
+            if (true) {
+//                packBackupFile(builder);
+                
+//                builder = new StringBuilder();
+//                String backfilePath = pullBackupFile(builder);
+//                out(builder.toString());
+                
+                builder = new StringBuilder();
+                deleteRemoteBackup(builder);
+                out(builder.toString());
+            }
         }
         catch (Exception ex) {
             out("Exception occurred, " + ex.getClass() + ", "
@@ -93,6 +110,11 @@ public class Program {
         }
         
         out("Completed");
+    }
+
+    private static void out(String message) {
+        gui.getOutputTextArea().setText(
+                gui.getOutputTextArea().getText() + message + '\n');
     }
 
     private static org.typesense.model.SearchParameters makeQueryParam(
@@ -255,8 +277,8 @@ public class Program {
         try {
             StringBuilder builder = new StringBuilder();
 
-            builder.append("We'll install the typesense in k8s cluster."
-                    + '\n');
+            builder.append("We'll install the typesense in k8s cluster.")
+                    .append('\n');
 
             ClassLoader classLoader = Thread.currentThread()
                     .getContextClassLoader();
@@ -272,7 +294,7 @@ public class Program {
             
             String ymlContent = String.join("\n", lines);
 
-            builder.append("Install typesense yml:" + '\n');
+            builder.append("Install typesense yml:").append('\n');
             builder.append(ymlContent);
             builder.append('\n');
             
@@ -335,11 +357,6 @@ public class Program {
 //            out("Failed" + '\n' + ex.getMessage());
 //        }
 //    }
-
-    private static void out(String message) {
-        gui.getOutputTextArea().setText(
-                gui.getOutputTextArea().getText() + message + '\n');
-    }
 
     private static boolean backupTypesense(StringBuilder builder) {
         // Initialize the Typesense client
@@ -406,5 +423,56 @@ public class Program {
         org.typesense.api.Client client = new org.typesense.api.Client(
                 configuration);
         return client;
+    }
+
+    private static String pullBackupFile(StringBuilder builder) {
+        String backupFilePath = "/data/tsbak.tar";
+        String filename = "tsbak.tar";
+        String downloadFilePath = java.nio.file.Paths.get(
+                System.getProperty("java.io.tmpdir"), filename)
+                .toAbsolutePath().toString();
+        
+        java.nio.file.Path downloadPath = new java.io.File(downloadFilePath)
+            .toPath();
+        
+        builder.append("Connecting to typesense-data-ssh pod.")
+                .append('\n');
+        
+        KubernetesClient kclient = new KubernetesClientBuilder().build();
+        
+        kclient.pods().inNamespace("typesense").withName("typesense-data-ssh")
+                .file(backupFilePath)
+                .copy(downloadPath);
+        
+        builder.append("Downloaded: ").append(downloadFilePath).append('\n');
+        
+        return downloadFilePath;
+    }
+
+    private static boolean packBackupFile(StringBuilder builder) {
+        builder.append("Packing remote backup").append('\n');
+        
+        KubernetesClient kclient = new KubernetesClientBuilder().build();
+        
+        kclient.pods().inNamespace("typesense").withName("typesense-data-ssh")
+                .exec("tar -cf ./data/tsbak.tar ./data/snapshot");
+        
+        builder.append("Packed remote backup");
+        return true;
+    }
+
+    private static boolean deleteRemoteBackup(StringBuilder builder) {
+        builder.append("Deleting remote backup").append('\n');
+        
+        KubernetesClient kclient = new KubernetesClientBuilder().build();
+        
+        kclient.pods().inNamespace("typesense").withName("typesense-data-ssh")
+                .exec("rm -f ./data/tsbak.tar");
+        
+        kclient.pods().inNamespace("typesense").withName("typesense-data-ssh")
+                .exec("rm -f ./data/snapshot");
+        
+        builder.append("Deleted remote backup");
+        return true;
     }
 }
