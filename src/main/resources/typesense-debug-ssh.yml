@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: alpine-ssh
+  namespace: typesense
+  labels:
+    app: alpine-ssh
+spec:
+  containers:
+    - name: alpine-ssh
+      image: sickp/alpine-sshd:7.9-r1
+      ports:
+        - containerPort: 22
+      volumeMounts:
+        - name: typesense-data
+          mountPath: /data
+  volumes:
+    - name: typesense-data
+      persistentVolumeClaim:
+        claimName: typesense-data-pvc

@@ -1,25 +1,27 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
 package com.mycompany.engineup;
 
-import com.jcraft.jsch.JSchException;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.Pod;
-import io.kubernetes.client.openapi.ApiClient;
-import io.kubernetes.client.openapi.ApiException;
-import io.kubernetes.client.openapi.Configuration;
-import io.kubernetes.client.openapi.apis.CoreV1Api;
-import io.kubernetes.client.openapi.models.V1Pod;
-import io.kubernetes.client.openapi.models.V1PodList;
-import io.kubernetes.client.util.Config;
-
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.KubernetesClientBuilder;
 import io.fabric8.kubernetes.client.PortForward;
 import io.fabric8.kubernetes.api.model.Service;
+import io.fabric8.kubernetes.client.dsl.ExecListener;
+import io.fabric8.kubernetes.client.dsl.ExecWatch;
+import io.fabric8.kubernetes.client.dsl.PodResource;
 import io.fabric8.kubernetes.client.dsl.Resource;
 import io.fabric8.kubernetes.client.utils.Serialization;
+import java.io.ByteArrayOutputStream;
 
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.time.Duration;
 import java.util.*;
 import java.util.logging.Level;
@@ -30,7 +32,7 @@ public class Program {
 
     private final static EngineUp gui = new EngineUp();
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
         gui.setVisible(true);
         out("Loading");
 
@@ -86,18 +88,20 @@ public class Program {
         
             out(serializeSearchResult(searchResults));
             
-//            // Backup typesense.
-//            builder = new StringBuilder();
-//            boolean success = backupTypesense(builder);
-//            out(builder.toString());
+            // Backup typesense.
+            builder = new StringBuilder();
+            boolean success = backupTypesense(builder);
+            out(builder.toString());
             
-//            if (success) {
-            if (true) {
-//                packBackupFile(builder);
+            if (success) {
+                builder = new StringBuilder();
+                packBackupFile(builder);
+                out(builder.toString());
                 
-//                builder = new StringBuilder();
-//                String backfilePath = pullBackupFile(builder);
-//                out(builder.toString());
+                builder = new StringBuilder();
+                String backupfilePath = pullBackupFile(builder);
+                out(builder.toString());
+                out("Backup file path: " + backupfilePath);
                 
                 builder = new StringBuilder();
                 deleteRemoteBackup(builder);
@@ -435,12 +439,14 @@ public class Program {
         java.nio.file.Path downloadPath = new java.io.File(downloadFilePath)
             .toPath();
         
-        builder.append("Connecting to typesense-data-ssh pod.")
+        builder.append("Connecting to typesense pod.")
                 .append('\n');
+        
+        String typesenseDataPodName = getTypesenseDataPodName();
         
         KubernetesClient kclient = new KubernetesClientBuilder().build();
         
-        kclient.pods().inNamespace("typesense").withName("typesense-data-ssh")
+        kclient.pods().inNamespace("typesense").withName(typesenseDataPodName)
                 .file(backupFilePath)
                 .copy(downloadPath);
         
@@ -452,27 +458,97 @@ public class Program {
     private static boolean packBackupFile(StringBuilder builder) {
         builder.append("Packing remote backup").append('\n');
         
-        KubernetesClient kclient = new KubernetesClientBuilder().build();
+        java.io.ByteArrayOutputStream outStream =
+                new java.io.ByteArrayOutputStream();
+        java.io.ByteArrayOutputStream errStream =
+                new java.io.ByteArrayOutputStream();
         
-        kclient.pods().inNamespace("typesense").withName("typesense-data-ssh")
-                .exec("tar -cf ./data/tsbak.tar ./data/snapshot");
+        String[] command = new String[] {
+            "tar", "-cf", "./data/tsbak.tar", "./data/snapshot"
+        };
+        
+        executeShellCommand(outStream, errStream, builder, command);
         
         builder.append("Packed remote backup");
         return true;
     }
 
-    private static boolean deleteRemoteBackup(StringBuilder builder) {
+    private static boolean deleteRemoteBackup(final StringBuilder builder) {
         builder.append("Deleting remote backup").append('\n');
         
-        KubernetesClient kclient = new KubernetesClientBuilder().build();
+        java.io.ByteArrayOutputStream outStream =
+                new java.io.ByteArrayOutputStream();
+        java.io.ByteArrayOutputStream errStream =
+                new java.io.ByteArrayOutputStream();
         
-        kclient.pods().inNamespace("typesense").withName("typesense-data-ssh")
-                .exec("rm -f ./data/tsbak.tar");
+        String[] command = new String[] {
+            "rm", "-f", "/data/tsbak.tar"
+        };
         
-        kclient.pods().inNamespace("typesense").withName("typesense-data-ssh")
-                .exec("rm -f ./data/snapshot");
+        executeShellCommand(outStream, errStream, builder, command);
+        
+        command = new String[] {
+            "rm", "-rf", "/data/snapshot"
+        };
+        
+        executeShellCommand(outStream, errStream, builder, command);
         
         builder.append("Deleted remote backup");
         return true;
+    }
+
+    private static void executeShellCommand(
+            ByteArrayOutputStream outStream,
+            ByteArrayOutputStream errStream,
+            final StringBuilder builder, String[] command) {
+        
+        KubernetesClient kclient = new KubernetesClientBuilder().build();
+        
+        ExecListener execListener = new ExecListener() {
+
+            @Override
+            public void onOpen() {
+                builder.append("exec open\n");
+            }
+
+            @Override
+            public void onFailure(Throwable t, ExecListener.Response failureResponse) {
+                builder.append("on failure").append("\n")
+                        .append(t.getClass()).append("\n")
+                        .append(failureResponse.toString())
+                        .append("\n");
+            }
+
+            @Override
+            public void onClose(int i, String string) {
+                builder.append("exec close\n")
+                        .append(Integer.toString(i)).append("\n")
+                        .append(string).append("\n");
+            }
+        };
+        
+        String typesenseDataPodName = getTypesenseDataPodName();
+        
+        kclient.pods().inNamespace("typesense")
+                .withName(typesenseDataPodName)
+                .writingOutput(outStream)
+                .writingError(errStream)
+                .usingListener(execListener)
+                .exec(command);
+    }
+
+    private static String getTypesenseDataPodName() {
+        KubernetesClient client = new KubernetesClientBuilder().build();
+        
+        List<Pod> pods = client.pods().inNamespace("typesense").list()
+                .getItems();
+        
+        for (Pod pod: pods) {
+            if (pod.getMetadata().getName().startsWith("typesense")) {
+                return pod.getMetadata().getName();
+            }
+        }
+        
+        return null;
     }
 }
