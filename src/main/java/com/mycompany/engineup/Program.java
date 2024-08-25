@@ -20,6 +20,7 @@ import io.fabric8.kubernetes.client.utils.Serialization;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.*;
+import org.typesense.api.Client;
 
 public class Program {
 
@@ -29,28 +30,47 @@ public class Program {
         gui.setVisible(true);
         out("Loading");
 
-        boolean connectionSuccess = checkKubectlConnection();
+        // Is typesense accessible.
+        StringBuilder builder = new StringBuilder();
+        boolean typesenseConnected = checkTypesense(builder);
+        out(builder.toString());
         
-        if (!connectionSuccess) {
-            out(manKubectlConnection());
-            return;
+        PortForward portForward;
+        
+        if (!typesenseConnected) {
+            boolean connectionSuccess = checkKubectlConnection();
+
+            if (!connectionSuccess) {
+                out(manKubectlConnection());
+                return;
+            }
+
+            boolean portForwardTestSuccess = checkPortForwardPossible();
+
+            if (!portForwardTestSuccess) {
+                out("Port forward test failure.");
+                out(installTypesense());
+            }
+
+            boolean typesenseNamespaceFound = checkTypesenseNamespacePresent();
+
+            if (!typesenseNamespaceFound) {
+                out("typesense namespace not found.");
+                out(installTypesense());
+            }
+            
+            try {
+                portForward = portForwardTypesense();
+            }
+            catch (EngineUpException | IOException
+                    | KubernetesClientException ex) {
+                
+                out("Port forward failure, " + ex.getClass() + ", "
+                        + ex.getMessage());
+            }
         }
         
-        boolean portForwardTestSuccess = checkPortForwardPossible();
-        
-        if (!portForwardTestSuccess) {
-            out("Port forward test failure.");
-            out(installTypesense());
-        }
-        
-        boolean typesenseNamespaceFound = checkTypesenseNamespacePresent();
-        
-        if (!typesenseNamespaceFound) {
-            out("typesense namespace not found.");
-            out(installTypesense());
-        }
-        
-        try (PortForward portForward = portForwardTypesense()) {
+        try {
             String q = "stark";
             org.typesense.model.SearchParameters searchParams =
                     makeQueryParam(q);
@@ -61,12 +81,15 @@ public class Program {
                     searchText(searchParams);
         
             out(serializeSearchResult(searchResults));
-        }
-        catch (IOException | KubernetesClientException ex) {
-            out("Port forward failure, " + ex.getMessage());
+            
+            // Backup typesense.
+            builder = new StringBuilder();
+            backupTypesense(builder);
+            out(builder.toString());
         }
         catch (Exception ex) {
-            out("Search failed, " + ex.getClass() + ", " + ex.getMessage());
+            out("Exception occurred, " + ex.getClass() + ", "
+                    + ex.getMessage());
         }
         
         out("Completed");
@@ -92,28 +115,31 @@ public class Program {
         StringBuilder builder = new StringBuilder();
         
         builder.append("Search Result:" + '\n');
-        builder.append("Found: " + searchResult.getFound() + '\n');
-        builder.append("Total Hits: " + searchResult.getHits().size() + '\n');
-        builder.append("Search Time (ms): " + searchResult.getSearchTimeMs()
-                + '\n');
+        builder.append("Found: ").append(searchResult.getFound()).append('\n');
+        builder.append("Total Hits: ").append(searchResult.getHits().size())
+                .append('\n');
+        builder.append("Search Time (ms): ")
+                .append(searchResult.getSearchTimeMs()).append('\n');
         
         // Print hits
         builder.append("Hits:" + '\n');
         
         for (org.typesense.model.SearchResultHit hit : searchResult.getHits()) {
-            builder.append("Document: " + hit.getDocument() + '\n');
+            builder.append("Document: ").append(hit.getDocument()).append('\n');
             builder.append("Highlight:" + '\n');
             
             for (org.typesense.model.SearchHighlight highlight : hit
                     .getHighlights()) {
                 
-                builder.append("  Field: " + highlight.getField() + '\n');
-                builder.append("    Matched Tokens: "
-                        + highlight.getMatchedTokens() + '\n');
-                builder.append("    Snippet: " + highlight.getSnippet() + '\n');
+                builder.append("  Field: ").append(highlight.getField())
+                        .append('\n');
+                builder.append("    Matched Tokens: ")
+                        .append(highlight.getMatchedTokens()).append('\n');
+                builder.append("    Snippet: ").append(highlight.getSnippet())
+                        .append('\n');
             }
             
-            builder.append("Text Match: " + hit.getTextMatch() + '\n');
+            builder.append("Text Match: ").append(hit.getTextMatch()).append('\n');
         }
         
         return builder.toString();
@@ -211,12 +237,16 @@ public class Program {
         StringBuilder builder = new StringBuilder();
         
         builder.append("SearchParams\n");
-        builder.append("Q: " + searchParams.getQ() + '\n');
-        builder.append("FilterBy: " + searchParams.getFilterBy() + '\n');
-        builder.append("SortBy: " + searchParams.getSortBy() + '\n');
-        builder.append("QueryBy: " + searchParams.getSortBy() + '\n');
-        builder.append("PerPage: " + searchParams.getPerPage() + '\n');
-        builder.append("Page: " + searchParams.getPage() + '\n');
+        builder.append("Q: ").append(searchParams.getQ()).append('\n')
+                .append("FilterBy: ").append(searchParams.getFilterBy())
+                .append('\n')
+                .append("SortBy: ").append(searchParams.getSortBy())
+                .append('\n')
+                .append("QueryBy: ").append(searchParams.getSortBy())
+                .append('\n')
+                .append("PerPage: ").append(searchParams.getPerPage())
+                .append('\n')
+                .append("Page: ").append(searchParams.getPage()).append('\n');
         
         return builder.toString();
     }
@@ -309,5 +339,72 @@ public class Program {
     private static void out(String message) {
         gui.getOutputTextArea().setText(
                 gui.getOutputTextArea().getText() + message + '\n');
+    }
+
+    private static boolean backupTypesense(StringBuilder builder) {
+        // Initialize the Typesense client
+        org.typesense.api.Client client = getTypesenseClient();
+        
+        // Perform the snapshot
+        Map<String, String> query = new HashMap<>();
+        query.put("snapshot_path", "/data/snapshot");
+        
+        try
+        {
+            Map<String, String> result = client.operations
+                    .perform("snapshot", query);
+            
+            if (result.containsKey("success")) {
+                Object success = result.get("success");
+                
+                if ((boolean) success) {
+                    builder.append("backup success").append('\n');
+                    return true;
+                }
+            }
+            
+            builder.append("backup result, ").append(result.toString());
+        }
+        catch (Exception ex) {
+            builder.append("backup exception: ").append(ex.getMessage())
+                    .append('\n');
+            return false;
+        }
+        
+        builder.append("backup unexpected code path").append('\n');
+        return false;
+    }
+
+    private static boolean checkTypesense(StringBuilder builder) {
+        Client client = getTypesenseClient();
+        
+        try {
+            Map<String, Object> result = client.health.retrieve();
+            
+            if (result.containsKey("ok")) {
+                builder.append("typesense health ok").append('\n');
+                return (boolean) result.get("ok");
+            }
+        }
+        catch (Exception ex) {
+            builder.append("typesense health exception, ")
+                    .append(ex.getMessage()).append('\n');
+            return false;
+        }
+        
+        return false;
+    }
+
+    private static Client getTypesenseClient() {
+        // Initialize the Typesense client
+        List<org.typesense.resources.Node> nodes = new ArrayList<>();
+        nodes.add(new org.typesense.resources
+                .Node("http", "localhost", "8108"));
+        org.typesense.api.Configuration configuration =
+                new org.typesense.api.Configuration(
+                        nodes, Duration.ofSeconds(2), "Welcome@1234");
+        org.typesense.api.Client client = new org.typesense.api.Client(
+                configuration);
+        return client;
     }
 }
