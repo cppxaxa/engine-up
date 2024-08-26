@@ -418,6 +418,28 @@ public class Program {
             
         });
         
+        gui.btnGetCmdPortForward.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                out("Cmd:");
+                out("kubectl port-forward svc/typesense-service 8108:8108 "
+                        + "-n typesense");
+            }
+            
+        });
+        
+        gui.btnGetTsWebAppUrl.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                out("First, make sure the health of typesense is ok.");
+                out("Url:");
+                out("https://bfritscher.github.io/typesense-dashboard");
+            }
+            
+        });
+        
         out("Ready");
     }
 

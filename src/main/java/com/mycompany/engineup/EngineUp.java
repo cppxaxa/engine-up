@@ -44,6 +44,8 @@ public class EngineUp extends javax.swing.JFrame {
         btnRestoreDb = new javax.swing.JButton();
         btnCheckHealth = new javax.swing.JButton();
         btnCheckHealthAfterPortForward = new javax.swing.JButton();
+        btnGetCmdPortForward = new javax.swing.JButton();
+        btnGetTsWebAppUrl = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -101,6 +103,24 @@ public class EngineUp extends javax.swing.JFrame {
         });
         jPanel1.add(btnCheckHealthAfterPortForward);
 
+        btnGetCmdPortForward.setText("Get Cmd TS Port Porward");
+        btnGetCmdPortForward.setMaximumSize(new java.awt.Dimension(10000, 25));
+        btnGetCmdPortForward.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnGetCmdPortForwardActionPerformed(evt);
+            }
+        });
+        jPanel1.add(btnGetCmdPortForward);
+
+        btnGetTsWebAppUrl.setText("Get TS webapp URL");
+        btnGetTsWebAppUrl.setMaximumSize(new java.awt.Dimension(10000, 25));
+        btnGetTsWebAppUrl.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnGetTsWebAppUrlActionPerformed(evt);
+            }
+        });
+        jPanel1.add(btnGetTsWebAppUrl);
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -132,6 +152,14 @@ public class EngineUp extends javax.swing.JFrame {
     private void btnCheckHealthAfterPortForwardActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCheckHealthAfterPortForwardActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_btnCheckHealthAfterPortForwardActionPerformed
+
+    private void btnGetCmdPortForwardActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnGetCmdPortForwardActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_btnGetCmdPortForwardActionPerformed
+
+    private void btnGetTsWebAppUrlActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnGetTsWebAppUrlActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_btnGetTsWebAppUrlActionPerformed
 
     /**
      * @param args the command line arguments
@@ -173,6 +201,8 @@ public class EngineUp extends javax.swing.JFrame {
     public javax.swing.JButton btnBackupDb;
     public javax.swing.JButton btnCheckHealth;
     public javax.swing.JButton btnCheckHealthAfterPortForward;
+    public javax.swing.JButton btnGetCmdPortForward;
+    public javax.swing.JButton btnGetTsWebAppUrl;
     public javax.swing.JButton btnInstallDb;
     public javax.swing.JButton btnRestoreDb;
     public javax.swing.JButton btnSearchAfterPortForward;
