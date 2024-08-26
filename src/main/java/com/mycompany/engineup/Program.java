@@ -24,6 +24,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.net.URISyntaxException;
+import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.*;
 import java.util.logging.Level;
@@ -338,6 +340,69 @@ public class Program {
                     out("Exception occurred, " + ex.getClass() + ", "
                             + ex.getMessage());
                 }
+            }
+            
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                new Thread(new Runnable() {
+
+                    @Override
+                    public void run() {
+                        bl();
+                    }
+                }).start();
+            }
+            
+        });
+        
+        gui.btnRestoreDb.addActionListener(new ActionListener() {
+
+            private void bl() {
+                out("Starting ...");
+                
+                String filename = "tsbak.tar";
+                String fileAbsolutePath = java.nio.file.Paths.get(
+                        System.getProperty("java.io.tmpdir"), filename)
+                        .toAbsolutePath().toString();
+
+                java.nio.file.Path filePath =
+                        new java.io.File(fileAbsolutePath).toPath();
+                
+                if (java.nio.file.Files.exists(filePath)) {
+                    out(fileAbsolutePath + " found.");
+                }
+                else {
+                    // Create the file from project resources.
+                    ClassLoader classLoader = Thread.currentThread()
+                            .getContextClassLoader();
+
+                    java.net.URL tsbakTarUrl = classLoader.getResource(
+                            "tsbak.tar");
+                    
+                    try {
+                        java.nio.file.Path tsbakTarPath =
+                                java.nio.file.Paths.get(tsbakTarUrl.toURI());
+
+                        byte[] bytes = java.nio.file.Files.readAllBytes(
+                                tsbakTarPath.toAbsolutePath());
+
+                        java.nio.file.Files.write(filePath, bytes);
+                        
+                    } catch (URISyntaxException ex) {
+                        out("URISyntaxException, " + ex.getMessage());
+                    } catch (IOException ex) {
+                        out("IOException, " + ex.getMessage());
+                    }
+                    
+                    out(fileAbsolutePath + " written.");
+                }
+                
+                // TODO(pxaxa): Typesense DB restore.
+                // Bring down typesense DB if up.
+                // Deploy the typesense-agent-ssh.
+                // Upload the tsbak.tar file.
+                // Extract teh typsense-agent-ssh.
+                // Delete the typesense-agent-ssh.
             }
             
             @Override
@@ -778,19 +843,19 @@ public class Program {
     }
 
     private static String getTypesenseDataPodName() {
-//        KubernetesClient client = new KubernetesClientBuilder().build();
-//        
-//        List<Pod> pods = client.pods().inNamespace("typesense").list()
-//                .getItems();
-//        
-//        for (Pod pod: pods) {
-//            if (pod.getMetadata().getName().startsWith("typesense")) {
-//                return pod.getMetadata().getName();
-//            }
-//        }
-//        
-//        return null;
+        KubernetesClient client = new KubernetesClientBuilder().build();
         
-        return "typesense-agent-ssh";
+        List<Pod> pods = client.pods().inNamespace("typesense").list()
+                .getItems();
+        
+        for (Pod pod: pods) {
+            if (pod.getMetadata().getName().startsWith("typesense")) {
+                return pod.getMetadata().getName();
+            }
+        }
+        
+        return null;
+        
+//        return "typesense-agent-ssh";
     }
 }

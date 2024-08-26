@@ -1,10 +1,10 @@
 apiVersion: v1
 kind: Pod
 metadata:
-  name: alpine-ssh
+  name: typesense-agent-ssh
   namespace: typesense
   labels:
-    app: alpine-ssh
+    app: typesense-agent-ssh
 spec:
   containers:
     - name: alpine-ssh

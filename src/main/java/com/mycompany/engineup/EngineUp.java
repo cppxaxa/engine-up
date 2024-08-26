@@ -41,6 +41,7 @@ public class EngineUp extends javax.swing.JFrame {
         btnBackupDb = new javax.swing.JButton();
         btnBackupAfterPortForward = new javax.swing.JButton();
         btnInstallDb = new javax.swing.JButton();
+        btnRestoreDb = new javax.swing.JButton();
         btnCheckHealth = new javax.swing.JButton();
         btnCheckHealthAfterPortForward = new javax.swing.JButton();
 
@@ -77,6 +78,10 @@ public class EngineUp extends javax.swing.JFrame {
         btnInstallDb.setLabel("Install DB");
         btnInstallDb.setMaximumSize(new java.awt.Dimension(10000, 25));
         jPanel1.add(btnInstallDb);
+
+        btnRestoreDb.setText("Restore DB");
+        btnRestoreDb.setMaximumSize(new java.awt.Dimension(10000, 25));
+        jPanel1.add(btnRestoreDb);
 
         btnCheckHealth.setText("Check Health");
         btnCheckHealth.setMaximumSize(new java.awt.Dimension(10000, 25));
@@ -169,6 +174,7 @@ public class EngineUp extends javax.swing.JFrame {
     public javax.swing.JButton btnCheckHealth;
     public javax.swing.JButton btnCheckHealthAfterPortForward;
     public javax.swing.JButton btnInstallDb;
+    public javax.swing.JButton btnRestoreDb;
     public javax.swing.JButton btnSearchAfterPortForward;
     public javax.swing.JButton btnSearchSample;
     private javax.swing.JPanel jPanel1;
