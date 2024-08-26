@@ -79,3 +79,24 @@ spec:
       port: 8108
       targetPort: 8108
   type: NodePort
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: typesense-agent-ssh
+  namespace: typesense
+  labels:
+    app: typesense-agent-ssh
+spec:
+  containers:
+    - name: alpine-ssh
+      image: sickp/alpine-sshd:7.9-r1
+      ports:
+        - containerPort: 22
+      volumeMounts:
+        - name: typesense-data
+          mountPath: /data
+  volumes:
+    - name: typesense-data
+      persistentVolumeClaim:
+        claimName: typesense-data-pvc

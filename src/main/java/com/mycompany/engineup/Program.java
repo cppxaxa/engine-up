@@ -65,15 +65,24 @@ public class Program {
                 out(installTypesense());
             }
             
-            try {
-                portForward = portForwardTypesense();
-            }
-            catch (EngineUpException | IOException
-                    | KubernetesClientException ex) {
+            while (!typesenseConnected) {
+                out("Waiting 500 millis ...");
+                Thread.sleep(500);
                 
-                out("Port forward failure, " + ex.getClass() + ", "
-                        + ex.getMessage());
+                try (PortForward pF = portForwardTypesense()) {
+                    builder = new StringBuilder();
+                    typesenseConnected = checkTypesense(builder);
+                    out(builder.toString());
+                }
+                catch (EngineUpException | IOException
+                        | KubernetesClientException ex) {
+
+                    out("Port forward failure, " + ex.getClass() + ", "
+                            + ex.getMessage());
+                }
             }
+            
+            portForward = portForwardTypesense();
         }
         
         try {
@@ -538,17 +547,19 @@ public class Program {
     }
 
     private static String getTypesenseDataPodName() {
-        KubernetesClient client = new KubernetesClientBuilder().build();
+//        KubernetesClient client = new KubernetesClientBuilder().build();
+//        
+//        List<Pod> pods = client.pods().inNamespace("typesense").list()
+//                .getItems();
+//        
+//        for (Pod pod: pods) {
+//            if (pod.getMetadata().getName().startsWith("typesense")) {
+//                return pod.getMetadata().getName();
+//            }
+//        }
+//        
+//        return null;
         
-        List<Pod> pods = client.pods().inNamespace("typesense").list()
-                .getItems();
-        
-        for (Pod pod: pods) {
-            if (pod.getMetadata().getName().startsWith("typesense")) {
-                return pod.getMetadata().getName();
-            }
-        }
-        
-        return null;
+        return "typesense-agent-ssh";
     }
 }
