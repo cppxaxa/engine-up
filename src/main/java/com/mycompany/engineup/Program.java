@@ -17,6 +17,8 @@ import io.fabric8.kubernetes.client.dsl.ExecWatch;
 import io.fabric8.kubernetes.client.dsl.PodResource;
 import io.fabric8.kubernetes.client.dsl.Resource;
 import io.fabric8.kubernetes.client.utils.Serialization;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.ByteArrayOutputStream;
 
 import java.io.IOException;
@@ -31,98 +33,327 @@ import org.typesense.api.Client;
 public class Program {
 
     private final static EngineUp gui = new EngineUp();
-
+    
     public static void main(String[] args) throws Exception {
         gui.setVisible(true);
         out("Loading");
-
-        // Is typesense accessible.
-        StringBuilder builder = new StringBuilder();
-        boolean typesenseConnected = checkTypesense(builder);
-        out(builder.toString());
         
-        PortForward portForward;
-        
-        if (!typesenseConnected) {
-            boolean connectionSuccess = checkKubectlConnection();
+        gui.btnSearchAfterPortForward.addActionListener(new ActionListener() {
 
-            if (!connectionSuccess) {
-                out(manKubectlConnection());
-                return;
-            }
-
-            boolean portForwardTestSuccess = checkPortForwardPossible();
-
-            if (!portForwardTestSuccess) {
-                out("Port forward test failure.");
-                out(installTypesense());
-            }
-
-            boolean typesenseNamespaceFound = checkTypesenseNamespacePresent();
-
-            if (!typesenseNamespaceFound) {
-                out("typesense namespace not found.");
-                out(installTypesense());
-            }
-            
-            while (!typesenseConnected) {
-                out("Waiting 500 millis ...");
-                Thread.sleep(500);
+            private void bl() {
+                out("Starting ...");
                 
-                try (PortForward pF = portForwardTypesense()) {
-                    builder = new StringBuilder();
-                    typesenseConnected = checkTypesense(builder);
-                    out(builder.toString());
-                }
-                catch (EngineUpException | IOException
-                        | KubernetesClientException ex) {
+                try (PortForward portForward = portForwardTypesense()) {
+                    String q = "stark";
+                    org.typesense.model.SearchParameters searchParams =
+                            makeQueryParam(q);
 
-                    out("Port forward failure, " + ex.getClass() + ", "
+                    out(serializeSearchParams(searchParams));
+
+                    org.typesense.model.SearchResult searchResults =
+                            searchText(searchParams);
+
+                    out(serializeSearchResult(searchResults));
+                }
+                catch (Exception ex) {
+                    out("Exception occurred, " + ex.getClass() + ", "
                             + ex.getMessage());
                 }
             }
             
-            portForward = portForwardTypesense();
-        }
-        
-        try {
-            String q = "stark";
-            org.typesense.model.SearchParameters searchParams =
-                    makeQueryParam(q);
-            
-            out(serializeSearchParams(searchParams));
-            
-            org.typesense.model.SearchResult searchResults =
-                    searchText(searchParams);
-        
-            out(serializeSearchResult(searchResults));
-            
-            // Backup typesense.
-            builder = new StringBuilder();
-            boolean success = backupTypesense(builder);
-            out(builder.toString());
-            
-            if (success) {
-                builder = new StringBuilder();
-                packBackupFile(builder);
-                out(builder.toString());
-                
-                builder = new StringBuilder();
-                String backupfilePath = pullBackupFile(builder);
-                out(builder.toString());
-                out("Backup file path: " + backupfilePath);
-                
-                builder = new StringBuilder();
-                deleteRemoteBackup(builder);
-                out(builder.toString());
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                new Thread(new Runnable() {
+
+                    @Override
+                    public void run() {
+                        bl();
+                    }
+                }).start();
             }
-        }
-        catch (Exception ex) {
-            out("Exception occurred, " + ex.getClass() + ", "
-                    + ex.getMessage());
-        }
+            
+        });
         
-        out("Completed");
+        gui.btnCheckHealth.addActionListener(new ActionListener() {
+
+            public void bl() {
+                out("Starting ...");
+                
+                // Is typesense accessible.
+                StringBuilder builder = new StringBuilder();
+                boolean typesenseConnected = checkTypesense(builder);
+                out(builder.toString());
+                out("Action result: " + typesenseConnected);
+            }
+            
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                new Thread(new Runnable() {
+
+                    @Override
+                    public void run() {
+                        bl();
+                    }
+                }).start();
+            }
+            
+        });
+        
+        gui.btnCheckHealthAfterPortForward.addActionListener(new ActionListener() {
+
+            public void bl() {
+                out("Starting ...");
+                
+                try (PortForward portForward = portForwardTypesense()) {
+                    // Is typesense accessible.
+                    StringBuilder builder = new StringBuilder();
+                    boolean typesenseConnected = checkTypesense(builder);
+                    out(builder.toString());
+                    out("Action result: " + typesenseConnected);
+                }
+                catch (Exception ex) {
+                    out("Exception occurred, " + ex.getClass() + ", "
+                            + ex.getMessage());
+                }
+            }
+            
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                new Thread(new Runnable() {
+
+                    @Override
+                    public void run() {
+                        bl();
+                    }
+                }).start();
+            }
+            
+        });
+        
+        gui.btnSearchSample.addActionListener(new ActionListener() {
+
+            public void bl() {
+                out("Starting ...");
+                
+                try {
+                    String q = "stark";
+                    org.typesense.model.SearchParameters searchParams =
+                            makeQueryParam(q);
+
+                    out(serializeSearchParams(searchParams));
+
+                    org.typesense.model.SearchResult searchResults =
+                            searchText(searchParams);
+
+                    out(serializeSearchResult(searchResults));
+                }
+                catch (Exception ex) {
+                    out("Exception occurred, " + ex.getClass() + ", "
+                            + ex.getMessage());
+                }
+            }
+            
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                new Thread(new Runnable() {
+
+                    @Override
+                    public void run() {
+                        bl();
+                    }
+                }).start();
+            }
+            
+        });
+        
+        gui.btnBackupDb.addActionListener(new ActionListener() {
+
+            public void bl() {
+                out("Starting ...");
+                
+                try {
+                    StringBuilder builder = new StringBuilder();
+                    boolean success = checkTypesense(builder);
+                    out(builder.toString());
+                    
+                    if (success) {
+                        builder = new StringBuilder();
+                        success = backupTypesense(builder);
+                        out(builder.toString());
+                    }
+
+                    if (success) {
+                        builder = new StringBuilder();
+                        packBackupFile(builder);
+                        out(builder.toString());
+
+                        builder = new StringBuilder();
+                        String backupfilePath = pullBackupFile(builder);
+                        out(builder.toString());
+                        out("Backup file path: " + backupfilePath);
+
+                        builder = new StringBuilder();
+                        deleteRemoteBackup(builder);
+                        out(builder.toString());
+                    }
+                }
+                catch (Exception ex) {
+                    out("Exception occurred, " + ex.getClass() + ", "
+                            + ex.getMessage());
+                }
+            }
+            
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                new Thread(new Runnable() {
+
+                    @Override
+                    public void run() {
+                        bl();
+                    }
+                }).start();
+            }
+            
+        });
+        
+        gui.btnBackupAfterPortForward.addActionListener(new ActionListener() {
+
+            public void bl() {
+                out("Starting ...");
+                
+                try (PortForward portForward = portForwardTypesense()) {
+                    StringBuilder builder = new StringBuilder();
+                    boolean success = checkTypesense(builder);
+                    out(builder.toString());
+                    
+                    if (success) {
+                        builder = new StringBuilder();
+                        success = backupTypesense(builder);
+                        out(builder.toString());
+                    }
+
+                    if (success) {
+                        builder = new StringBuilder();
+                        packBackupFile(builder);
+                        out(builder.toString());
+
+                        builder = new StringBuilder();
+                        String backupfilePath = pullBackupFile(builder);
+                        out(builder.toString());
+                        out("Backup file path: " + backupfilePath);
+
+                        builder = new StringBuilder();
+                        deleteRemoteBackup(builder);
+                        out(builder.toString());
+                    }
+                }
+                catch (Exception ex) {
+                    out("Exception occurred, " + ex.getClass() + ", "
+                            + ex.getMessage());
+                }
+            }
+            
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                new Thread(new Runnable() {
+
+                    @Override
+                    public void run() {
+                        bl();
+                    }
+                }).start();
+            }
+            
+        });
+        
+        gui.btnInstallDb.addActionListener(new ActionListener() {
+
+            public void bl() {
+                out("Starting ...");
+                
+                // Is typesense accessible.
+                StringBuilder builder = new StringBuilder();
+                boolean typesenseConnected = checkTypesense(builder);
+                out(builder.toString());
+
+                if (!typesenseConnected) {
+                    boolean connectionSuccess = checkKubectlConnection();
+
+                    if (!connectionSuccess) {
+                        out(manKubectlConnection());
+                        return;
+                    }
+
+                    boolean portForwardTestSuccess = checkPortForwardPossible();
+
+                    if (!portForwardTestSuccess) {
+                        out("Port forward test failure.");
+                        out(installTypesense());
+                    }
+
+                    boolean typesenseNamespaceFound =
+                            checkTypesenseNamespacePresent();
+
+                    if (!typesenseNamespaceFound) {
+                        out("typesense namespace not found.");
+                        out(installTypesense());
+                    }
+
+                    while (!typesenseConnected) {
+                        out("Waiting 500 millis ...");
+                        
+                        try {
+                            Thread.sleep(500);
+                        } catch (InterruptedException ex) {
+                            out("Thread sleep failed, " + ex.getMessage());
+                        }
+
+                        try (PortForward pF = portForwardTypesense()) {
+                            builder = new StringBuilder();
+                            typesenseConnected = checkTypesense(builder);
+                            out(builder.toString());
+                        }
+                        catch (EngineUpException | IOException
+                                | KubernetesClientException ex) {
+
+                            out("Port forward failure, " + ex.getClass() + ", "
+                                    + ex.getMessage());
+                        }
+                    }
+                }
+
+                try (PortForward portForward = portForwardTypesense()) {
+                    String q = "stark";
+                    org.typesense.model.SearchParameters searchParams =
+                            makeQueryParam(q);
+
+                    out(serializeSearchParams(searchParams));
+
+                    org.typesense.model.SearchResult searchResults =
+                            searchText(searchParams);
+
+                    out(serializeSearchResult(searchResults));
+                }
+                catch (Exception ex) {
+                    out("Exception occurred, " + ex.getClass() + ", "
+                            + ex.getMessage());
+                }
+            }
+            
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                new Thread(new Runnable() {
+
+                    @Override
+                    public void run() {
+                        bl();
+                    }
+                }).start();
+            }
+            
+        });
+        
+        out("Ready");
     }
 
     private static void out(String message) {

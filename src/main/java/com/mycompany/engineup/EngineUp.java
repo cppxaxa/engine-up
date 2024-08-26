@@ -6,6 +6,7 @@
 package com.mycompany.engineup;
 
 import javax.swing.JTextArea;
+import javax.swing.text.DefaultCaret;
 
 /**
  *
@@ -18,6 +19,9 @@ public class EngineUp extends javax.swing.JFrame {
      */
     public EngineUp() {
         initComponents();
+        
+        DefaultCaret caret = (DefaultCaret)outputTextArea.getCaret();
+        caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
     }
 
     /**
@@ -31,6 +35,14 @@ public class EngineUp extends javax.swing.JFrame {
 
         jScrollPane1 = new javax.swing.JScrollPane();
         outputTextArea = new javax.swing.JTextArea();
+        jPanel1 = new javax.swing.JPanel();
+        btnSearchAfterPortForward = new javax.swing.JButton();
+        btnSearchSample = new javax.swing.JButton();
+        btnBackupDb = new javax.swing.JButton();
+        btnBackupAfterPortForward = new javax.swing.JButton();
+        btnInstallDb = new javax.swing.JButton();
+        btnCheckHealth = new javax.swing.JButton();
+        btnCheckHealthAfterPortForward = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -41,25 +53,80 @@ public class EngineUp extends javax.swing.JFrame {
         outputTextArea.setName("outputTextArea"); // NOI18N
         jScrollPane1.setViewportView(outputTextArea);
 
+        jPanel1.setMaximumSize(new java.awt.Dimension(300, 100));
+        jPanel1.setMinimumSize(new java.awt.Dimension(300, 100));
+        jPanel1.setPreferredSize(new java.awt.Dimension(300, 100));
+        jPanel1.setLayout(new javax.swing.BoxLayout(jPanel1, javax.swing.BoxLayout.Y_AXIS));
+
+        btnSearchAfterPortForward.setText("Search With Port Forward");
+        btnSearchAfterPortForward.setMaximumSize(new java.awt.Dimension(10000, 25));
+        jPanel1.add(btnSearchAfterPortForward);
+
+        btnSearchSample.setLabel("Search Sample");
+        btnSearchSample.setMaximumSize(new java.awt.Dimension(10000, 25));
+        jPanel1.add(btnSearchSample);
+
+        btnBackupDb.setLabel("Backup DB");
+        btnBackupDb.setMaximumSize(new java.awt.Dimension(10000, 25));
+        jPanel1.add(btnBackupDb);
+
+        btnBackupAfterPortForward.setText("Backup DB With Port Forward");
+        btnBackupAfterPortForward.setMaximumSize(new java.awt.Dimension(10000, 25));
+        jPanel1.add(btnBackupAfterPortForward);
+
+        btnInstallDb.setLabel("Install DB");
+        btnInstallDb.setMaximumSize(new java.awt.Dimension(10000, 25));
+        jPanel1.add(btnInstallDb);
+
+        btnCheckHealth.setText("Check Health");
+        btnCheckHealth.setMaximumSize(new java.awt.Dimension(10000, 25));
+        btnCheckHealth.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnCheckHealthActionPerformed(evt);
+            }
+        });
+        jPanel1.add(btnCheckHealth);
+
+        btnCheckHealthAfterPortForward.setText("Check Health With Port Forward");
+        btnCheckHealthAfterPortForward.setMaximumSize(new java.awt.Dimension(10000, 25));
+        btnCheckHealthAfterPortForward.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnCheckHealthAfterPortForwardActionPerformed(evt);
+            }
+        });
+        jPanel1.add(btnCheckHealthAfterPortForward);
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 370, Short.MAX_VALUE)
+                .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, 222, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 414, Short.MAX_VALUE)
                 .addContainerGap())
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 274, Short.MAX_VALUE)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 412, Short.MAX_VALUE)
+                    .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
+
+    private void btnCheckHealthActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCheckHealthActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_btnCheckHealthActionPerformed
+
+    private void btnCheckHealthAfterPortForwardActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCheckHealthAfterPortForwardActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_btnCheckHealthAfterPortForwardActionPerformed
 
     /**
      * @param args the command line arguments
@@ -97,6 +164,14 @@ public class EngineUp extends javax.swing.JFrame {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    public javax.swing.JButton btnBackupAfterPortForward;
+    public javax.swing.JButton btnBackupDb;
+    public javax.swing.JButton btnCheckHealth;
+    public javax.swing.JButton btnCheckHealthAfterPortForward;
+    public javax.swing.JButton btnInstallDb;
+    public javax.swing.JButton btnSearchAfterPortForward;
+    public javax.swing.JButton btnSearchSample;
+    private javax.swing.JPanel jPanel1;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JTextArea outputTextArea;
     // End of variables declaration//GEN-END:variables
