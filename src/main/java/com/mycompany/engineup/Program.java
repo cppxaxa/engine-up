@@ -22,6 +22,7 @@ import java.awt.event.ActionListener;
 import java.io.ByteArrayOutputStream;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.URISyntaxException;
@@ -395,6 +396,30 @@ public class Program {
                     }
                     
                     out(fileAbsolutePath + " written.");
+                }
+                
+                try (KubernetesClient kclient = new KubernetesClientBuilder()
+                        .build()) {
+                    
+                    // Create the file from project resources.
+                    ClassLoader classLoader = Thread.currentThread()
+                            .getContextClassLoader();
+
+                    kclient.load(classLoader
+                            .getResourceAsStream("typesense.yml"))
+                            .inNamespace("typesense").delete();
+                }
+                
+                try (KubernetesClient kclient = new KubernetesClientBuilder()
+                        .build()) {
+                    
+                    // Create the file from project resources.
+                    ClassLoader classLoader = Thread.currentThread()
+                            .getContextClassLoader();
+
+                    kclient.load(classLoader
+                            .getResourceAsStream("typesense.yml"))
+                            .inNamespace("typesense").create();
                 }
                 
                 // TODO(pxaxa): Typesense DB restore.
