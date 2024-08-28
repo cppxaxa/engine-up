@@ -361,6 +361,8 @@ public class Program {
             private void bl() {
                 out("Starting ...");
                 
+                StringBuilder builder = new StringBuilder();
+                
                 String filename = "tsbak.tar";
                 String fileAbsolutePath = java.nio.file.Paths.get(
                         System.getProperty("java.io.tmpdir"), filename)
@@ -401,6 +403,8 @@ public class Program {
                 try (KubernetesClient kclient = new KubernetesClientBuilder()
                         .build()) {
                     
+                    out("Deleting typesense server");
+                    
                     // Create the file from project resources.
                     ClassLoader classLoader = Thread.currentThread()
                             .getContextClassLoader();
@@ -408,10 +412,77 @@ public class Program {
                     kclient.load(classLoader
                             .getResourceAsStream("typesense.yml"))
                             .inNamespace("typesense").delete();
+                    
+                    out("Deleted typesense server");
                 }
                 
                 try (KubernetesClient kclient = new KubernetesClientBuilder()
                         .build()) {
+                    
+                    out("Creating typesense-agent-ssh server");
+                    
+                    // Create the file from project resources.
+                    ClassLoader classLoader = Thread.currentThread()
+                            .getContextClassLoader();
+
+                    kclient.load(classLoader
+                            .getResourceAsStream("typesense-agent-ssh.yml"))
+                            .inNamespace("typesense").create();
+                    
+                    out("Created typesense-agent-ssh server");
+                }
+                
+                // Wait for the typesense-agent-ssh to startup.
+                // TODO(pxaxa)
+                
+                // Copy the file to the typesense storage.
+                try (KubernetesClient kclient = new KubernetesClientBuilder()
+                        .build()) {
+                    
+                    out("Copying the tsbak.tar file to typesense-data");
+                    
+                    kclient.pods().inNamespace("typesense")
+                            .withName("typesense-agent-ssh")
+                            .file("/data/tsbak.tar")
+                            .upload(filePath);
+                    
+                    out("Copied the tsbak.tar file to typesense-data");
+                }
+                
+                // Extract the file in the typesense storage.
+                java.io.ByteArrayOutputStream outStream =
+                        new java.io.ByteArrayOutputStream();
+                java.io.ByteArrayOutputStream errStream =
+                        new java.io.ByteArrayOutputStream();
+
+                String[] command = new String[] {
+                    "pwd"
+                };
+                
+                executeShellCommand(
+                        "typesense-agent-ssh", outStream, errStream, builder,
+                        command);
+                
+                try (KubernetesClient kclient = new KubernetesClientBuilder()
+                        .build()) {
+                    
+                    out("Deleting typesense-agent-ssh server");
+                    
+                    // Create the file from project resources.
+                    ClassLoader classLoader = Thread.currentThread()
+                            .getContextClassLoader();
+
+                    kclient.load(classLoader
+                            .getResourceAsStream("typesense-agent-ssh.yml"))
+                            .inNamespace("typesense").delete();
+                    
+                    out("Deleted typesense-agent-ssh server");
+                }
+                
+                try (KubernetesClient kclient = new KubernetesClientBuilder()
+                        .build()) {
+                    
+                    out("Creating typesense server");
                     
                     // Create the file from project resources.
                     ClassLoader classLoader = Thread.currentThread()
@@ -420,6 +491,8 @@ public class Program {
                     kclient.load(classLoader
                             .getResourceAsStream("typesense.yml"))
                             .inNamespace("typesense").create();
+                    
+                    out("Created typesense server");
                 }
                 
                 // TODO(pxaxa): Typesense DB restore.
@@ -819,7 +892,9 @@ public class Program {
             "tar", "-cf", "./data/tsbak.tar", "./data/snapshot"
         };
         
-        executeShellCommand(outStream, errStream, builder, command);
+        executeShellCommand(
+                getTypesenseDataPodName(), outStream, errStream, builder,
+                command);
         
         builder.append("Packed remote backup");
         return true;
@@ -837,22 +912,28 @@ public class Program {
             "rm", "-f", "/data/tsbak.tar"
         };
         
-        executeShellCommand(outStream, errStream, builder, command);
+        executeShellCommand(
+                getTypesenseDataPodName(), outStream, errStream, builder,
+                command);
         
         command = new String[] {
             "rm", "-rf", "/data/snapshot"
         };
         
-        executeShellCommand(outStream, errStream, builder, command);
+        executeShellCommand(
+                getTypesenseDataPodName(), outStream, errStream, builder,
+                command);
         
         builder.append("Deleted remote backup");
         return true;
     }
 
     private static void executeShellCommand(
+            String typesenseDataPodName,
             ByteArrayOutputStream outStream,
             ByteArrayOutputStream errStream,
-            final StringBuilder builder, String[] command) {
+            final StringBuilder builder,
+            String[] command) {
         
         KubernetesClient kclient = new KubernetesClientBuilder().build();
         
@@ -864,7 +945,9 @@ public class Program {
             }
 
             @Override
-            public void onFailure(Throwable t, ExecListener.Response failureResponse) {
+            public void onFailure(
+                    Throwable t, ExecListener.Response failureResponse) {
+
                 builder.append("on failure").append("\n")
                         .append(t.getClass()).append("\n")
                         .append(failureResponse.toString())
@@ -878,8 +961,6 @@ public class Program {
                         .append(string).append("\n");
             }
         };
-        
-        String typesenseDataPodName = getTypesenseDataPodName();
         
         kclient.pods().inNamespace("typesense")
                 .withName(typesenseDataPodName)

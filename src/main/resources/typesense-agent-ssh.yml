@@ -1,3 +1,41 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: typesense
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: typesense-data-pv
+  namespace: typesense
+  labels:
+    type: local
+spec:
+  storageClassName: "gp3"
+  capacity:
+    storage: 2Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/home/rancher"
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: typesense-data-pvc
+  namespace: typesense
+spec:
+  storageClassName: "gp3"
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2Gi
+  selector:
+    matchLabels:
+      type: local
+---
 apiVersion: v1
 kind: Pod
 metadata:
