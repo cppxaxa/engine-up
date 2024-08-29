@@ -419,7 +419,7 @@ public class Program {
                 try (KubernetesClient kclient = new KubernetesClientBuilder()
                         .build()) {
                     
-                    out("Creating typesense-agent-ssh server");
+                    out("Deleting typesense-agent-ssh server");
                     
                     // Create the file from project resources.
                     ClassLoader classLoader = Thread.currentThread()
@@ -427,13 +427,93 @@ public class Program {
 
                     kclient.load(classLoader
                             .getResourceAsStream("typesense-agent-ssh.yml"))
-                            .inNamespace("typesense").create();
+                            .inNamespace("typesense").delete();
+                    
+                    out("Deleted typesense-agent-ssh server");
+                }
+                
+                // Check if typesense namespace is completely deleted.
+                boolean namespaceDeleted = false;
+                
+                while (!namespaceDeleted) {
+                    try (KubernetesClient kclient = new KubernetesClientBuilder().build()) {
+                        List<Pod> pods = kclient.pods().inNamespace("typesense").list().getItems();
+                        
+                        if (pods.size() == 0) {
+                            namespaceDeleted = true;
+                        }
+                        else {
+                            out("Waiting ...");
+                            Thread.sleep(1000);
+                        }
+                    }
+                    catch (KubernetesClientException | InterruptedException ex) {
+                        namespaceDeleted = true;
+                    }
+                }
+                
+                try (KubernetesClient kclient = new KubernetesClientBuilder()
+                        .build()) {
+                    
+                    out("Creating typesense-agent-ssh server");
+                    
+                    // Create the file from project resources.
+                    ClassLoader classLoader = Thread.currentThread()
+                            .getContextClassLoader();
+
+//                    kclient.load(classLoader
+//                            .getResourceAsStream("typesense-agent-ssh.yml"))
+//                            .inNamespace("typesense").create();
+                    
+                    KubernetesHelper helper = new KubernetesHelper(kclient);
+                    java.io.InputStream yamlStream = classLoader
+                            .getResourceAsStream("typesense-agent-ssh.yml");
+
+                    helper.apply(yamlStream);
                     
                     out("Created typesense-agent-ssh server");
                 }
                 
-                // Wait for the typesense-agent-ssh to startup.
-                // TODO(pxaxa)
+                // Check if typesense-agent-ssh started completely.
+                boolean agentStarted = false;
+                
+                while (!agentStarted) {
+                    try (KubernetesClient kclient =
+                            new KubernetesClientBuilder().build()) {
+                        
+                        try (PortForward portForward = kclient.pods()
+                                .inNamespace("typesense")
+                                .withName("typesense-agent-ssh")
+                                .portForward(22, 2222)) {
+                            
+                            agentStarted = true;
+                        }
+                        catch (IOException ex) {
+                        }
+                    }
+                    catch (KubernetesClientException ex) {
+                        out("Waiting ...");
+                        
+                        try {
+                            Thread.sleep(1000);
+                        }
+                        catch (InterruptedException ex1) {
+                        }
+                    }
+                }
+                
+                java.io.ByteArrayOutputStream outStream =
+                        new java.io.ByteArrayOutputStream();
+                java.io.ByteArrayOutputStream errStream =
+                        new java.io.ByteArrayOutputStream();
+
+                String[] command = new String[] {
+                    "rm", "-rf", "/data/*"
+                };
+                
+                executeShellCommand(
+                        "typesense-agent-ssh", outStream, errStream, builder,
+                        command);
                 
                 // Copy the file to the typesense storage.
                 try (KubernetesClient kclient = new KubernetesClientBuilder()
@@ -448,15 +528,38 @@ public class Program {
                     
                     out("Copied the tsbak.tar file to typesense-data");
                 }
+                catch (KubernetesClientException ex) {
+                    out("K8s exception while copying tsbak.tar to pod, "
+                            + ex.getMessage());
+                }
                 
-                // Extract the file in the typesense storage.
-                java.io.ByteArrayOutputStream outStream =
-                        new java.io.ByteArrayOutputStream();
-                java.io.ByteArrayOutputStream errStream =
-                        new java.io.ByteArrayOutputStream();
-
-                String[] command = new String[] {
-                    "pwd"
+                outStream = new java.io.ByteArrayOutputStream();
+                errStream = new java.io.ByteArrayOutputStream();
+                
+                command = new String[] {
+                    "tar", "x", "-f", "/data/tsbak.tar", "-C", "/"
+                };
+                
+                executeShellCommand(
+                        "typesense-agent-ssh", outStream, errStream, builder,
+                        command);
+                
+                outStream = new java.io.ByteArrayOutputStream();
+                errStream = new java.io.ByteArrayOutputStream();
+                
+                command = new String[] {
+                    "cp", "-r", "/data/snapshot/*", "/data/."
+                };
+                
+                executeShellCommand(
+                        "typesense-agent-ssh", outStream, errStream, builder,
+                        command);
+                
+                outStream = new java.io.ByteArrayOutputStream();
+                errStream = new java.io.ByteArrayOutputStream();
+                
+                command = new String[] {
+                    "rm", "-rf", "/data/snapshot"
                 };
                 
                 executeShellCommand(
@@ -479,21 +582,21 @@ public class Program {
                     out("Deleted typesense-agent-ssh server");
                 }
                 
-                try (KubernetesClient kclient = new KubernetesClientBuilder()
-                        .build()) {
-                    
-                    out("Creating typesense server");
-                    
-                    // Create the file from project resources.
-                    ClassLoader classLoader = Thread.currentThread()
-                            .getContextClassLoader();
-
-                    kclient.load(classLoader
-                            .getResourceAsStream("typesense.yml"))
-                            .inNamespace("typesense").create();
-                    
-                    out("Created typesense server");
-                }
+//                try (KubernetesClient kclient = new KubernetesClientBuilder()
+//                        .build()) {
+//                    
+//                    out("Creating typesense server");
+//                    
+//                    // Create the file from project resources.
+//                    ClassLoader classLoader = Thread.currentThread()
+//                            .getContextClassLoader();
+//
+//                    kclient.load(classLoader
+//                            .getResourceAsStream("typesense.yml"))
+//                            .inNamespace("typesense").create();
+//                    
+//                    out("Created typesense server");
+//                }
                 
                 // TODO(pxaxa): Typesense DB restore.
                 // Bring down typesense DB if up.
@@ -501,6 +604,75 @@ public class Program {
                 // Upload the tsbak.tar file.
                 // Extract teh typsense-agent-ssh.
                 // Delete the typesense-agent-ssh.
+                
+                // Install typesense.
+                // Is typesense accessible.
+                builder = new StringBuilder();
+                boolean typesenseConnected = checkTypesense(builder);
+                out(builder.toString());
+
+                if (!typesenseConnected) {
+                    boolean connectionSuccess = checkKubectlConnection();
+
+                    if (!connectionSuccess) {
+                        out(manKubectlConnection());
+                        return;
+                    }
+
+                    boolean portForwardTestSuccess = checkPortForwardPossible();
+
+                    if (!portForwardTestSuccess) {
+                        out("Port forward test failure.");
+                        out(installTypesense());
+                    }
+
+                    boolean typesenseNamespaceFound =
+                            checkTypesenseNamespacePresent();
+
+                    if (!typesenseNamespaceFound) {
+                        out("typesense namespace not found.");
+                        out(installTypesense());
+                    }
+
+                    while (!typesenseConnected) {
+                        out("Waiting 500 millis ...");
+                        
+                        try {
+                            Thread.sleep(500);
+                        } catch (InterruptedException ex) {
+                            out("Thread sleep failed, " + ex.getMessage());
+                        }
+
+                        try (PortForward pF = portForwardTypesense()) {
+                            builder = new StringBuilder();
+                            typesenseConnected = checkTypesense(builder);
+                            out(builder.toString());
+                        }
+                        catch (EngineUpException | IOException
+                                | KubernetesClientException ex) {
+
+                            out("Port forward failure, " + ex.getClass() + ", "
+                                    + ex.getMessage());
+                        }
+                    }
+                }
+
+                try (PortForward portForward = portForwardTypesense()) {
+                    String q = "stark";
+                    org.typesense.model.SearchParameters searchParams =
+                            makeQueryParam(q);
+
+                    out(serializeSearchParams(searchParams));
+
+                    org.typesense.model.SearchResult searchResults =
+                            searchText(searchParams);
+
+                    out(serializeSearchResult(searchResults));
+                }
+                catch (Exception ex) {
+                    out("Exception occurred, " + ex.getClass() + ", "
+                            + ex.getMessage());
+                }
             }
             
             @Override
