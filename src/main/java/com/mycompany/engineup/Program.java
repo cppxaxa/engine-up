@@ -31,6 +31,8 @@ public class Program {
     private static PortForward typesensePortForward = null;
     
     public static void main(String[] args) throws Exception {
+        gui.setExtendedState(gui.getExtendedState()
+                | javax.swing.JFrame.MAXIMIZED_BOTH );
         gui.setVisible(true);
         out("Loading");
         
