@@ -5,7 +5,6 @@
  */
 package com.mycompany.engineup;
 
-import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientException;
@@ -14,32 +13,61 @@ import io.fabric8.kubernetes.client.PortForward;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.client.dsl.ExecListener;
 import io.fabric8.kubernetes.client.dsl.ExecWatch;
-import io.fabric8.kubernetes.client.dsl.PodResource;
-import io.fabric8.kubernetes.client.dsl.Resource;
-import io.fabric8.kubernetes.client.utils.Serialization;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.io.ByteArrayOutputStream;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
 import java.net.URISyntaxException;
-import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.typesense.api.Client;
 
 public class Program {
 
     private final static EngineUp gui = new EngineUp();
+    private static PortForward typesensePortForward = null;
     
     public static void main(String[] args) throws Exception {
         gui.setVisible(true);
         out("Loading");
+        
+        gui.chkPortForward.addItemListener(new ItemListener() {
+
+            @Override
+            public void itemStateChanged(ItemEvent e) {
+                try {
+                    if (gui.chkPortForward.isSelected()) {
+                        if (typesensePortForward == null
+                                || !typesensePortForward.isAlive()) {
+                            
+                            typesensePortForward = portForwardTypesense();
+                        }
+                        
+                        out("Enabled port forwarding");
+                    }
+                    else {
+                        if (typesensePortForward != null
+                                && typesensePortForward.isAlive()) {
+
+                            typesensePortForward.close();
+                            typesensePortForward = null;
+                        }
+                        
+                        out("Disabled port forwarding");
+                    }
+                }
+                catch (KubernetesClientException | EngineUpException
+                        | IOException ex) {
+
+                    out("Checkbox failure, " + ex.getClass() + ": "
+                            + ex.getMessage());
+                }
+            }
+            
+        });        
         
         gui.btnSearchAfterPortForward.addActionListener(new ActionListener() {
 
@@ -102,7 +130,8 @@ public class Program {
             
         });
         
-        gui.btnCheckHealthAfterPortForward.addActionListener(new ActionListener() {
+        gui.btnCheckHealthAfterPortForward
+                .addActionListener(new ActionListener() {
 
             public void bl() {
                 out("Starting ...");
@@ -303,10 +332,10 @@ public class Program {
                     }
 
                     while (!typesenseConnected) {
-                        out("Waiting 500 millis ...");
+                        out("Waiting ...");
                         
                         try {
-                            Thread.sleep(500);
+                            Thread.sleep(1000);
                         } catch (InterruptedException ex) {
                             out("Thread sleep failed, " + ex.getMessage());
                         }
@@ -436,8 +465,11 @@ public class Program {
                 boolean namespaceDeleted = false;
                 
                 while (!namespaceDeleted) {
-                    try (KubernetesClient kclient = new KubernetesClientBuilder().build()) {
-                        List<Pod> pods = kclient.pods().inNamespace("typesense").list().getItems();
+                    try (KubernetesClient kclient =
+                            new KubernetesClientBuilder().build()) {
+                        
+                        List<Pod> pods = kclient.pods()
+                                .inNamespace("typesense").list().getItems();
                         
                         if (pods.size() == 0) {
                             namespaceDeleted = true;
@@ -447,7 +479,9 @@ public class Program {
                             Thread.sleep(1000);
                         }
                     }
-                    catch (KubernetesClientException | InterruptedException ex) {
+                    catch (KubernetesClientException
+                            | InterruptedException ex) {
+                        
                         namespaceDeleted = true;
                     }
                 }
@@ -455,18 +489,14 @@ public class Program {
                 boolean typesenseAgentCreated = false;
                 
                 while (!typesenseAgentCreated) {
-                    try (KubernetesClient kclient = new KubernetesClientBuilder()
-                            .build()) {
+                    try (KubernetesClient kclient =
+                            new KubernetesClientBuilder().build()) {
 
                         out("Creating typesense-agent-ssh server");
 
                         // Create the file from project resources.
                         ClassLoader classLoader = Thread.currentThread()
                                 .getContextClassLoader();
-
-    //                    kclient.load(classLoader
-    //                            .getResourceAsStream("typesense-agent-ssh.yml"))
-    //                            .inNamespace("typesense").create();
 
                         KubernetesHelper helper = new KubernetesHelper(kclient);
                         java.io.InputStream yamlStream = classLoader
@@ -525,12 +555,42 @@ public class Program {
                         new java.io.ByteArrayOutputStream();
 
                 String[] command = new String[] {
-                    "rm", "-rf", "/data/*"
+                    "ls", "/data"
                 };
                 
                 executeShellCommand(
                         "typesense-agent-ssh", outStream, errStream, builder,
                         command);
+                
+                // Get data folder contents.
+                String dataLs = outStream.toString();
+                String[] dataItems = dataLs.split("\n");
+                
+                for (String item: dataItems) {
+                    outStream = new java.io.ByteArrayOutputStream();
+                    errStream = new java.io.ByteArrayOutputStream();
+
+                    command = new String[] {
+                        "rm", "-rf", "/data/" + item
+                    };
+                    
+                    executeShellCommand(
+                        "typesense-agent-ssh", outStream, errStream, builder,
+                        command);
+                    
+                    out("\t" + item + " : " + outStream.toString());
+                }
+                
+//                outStream = new java.io.ByteArrayOutputStream();
+//                errStream = new java.io.ByteArrayOutputStream();
+//
+//                command = new String[] {
+//                    "rm", "-rf", "/data/*"
+//                };
+//                
+//                executeShellCommand(
+//                        "typesense-agent-ssh", outStream, errStream, builder,
+//                        command);
                 
                 // Copy the file to the typesense storage.
                 try (KubernetesClient kclient = new KubernetesClientBuilder()
@@ -565,7 +625,18 @@ public class Program {
                 errStream = new java.io.ByteArrayOutputStream();
                 
                 command = new String[] {
-                    "cp", "-r", "/data/snapshot/*", "/data/."
+                    "cp", "-r", "/data/snapshot/.", "/data/."
+                };
+                
+                executeShellCommand(
+                        "typesense-agent-ssh", outStream, errStream, builder,
+                        command);
+                
+                outStream = new java.io.ByteArrayOutputStream();
+                errStream = new java.io.ByteArrayOutputStream();
+                
+                command = new String[] {
+                    "rm", "-f", "/data/tsbak.tar"
                 };
                 
                 executeShellCommand(
@@ -719,7 +790,8 @@ public class Program {
                         .append('\n');
             }
             
-            builder.append("Text Match: ").append(hit.getTextMatch()).append('\n');
+            builder.append("Text Match: ").append(hit.getTextMatch())
+                    .append('\n');
         }
         
         return builder.toString();
@@ -846,7 +918,7 @@ public class Program {
                         + ex.getMessage());
                 try {
                     out("Waiting ...");
-                    Thread.sleep(500);
+                    Thread.sleep(1000);
                 }
                 catch (InterruptedException ex1) {
                     out("Thread sleep failed, " + ex1.getMessage());
@@ -919,26 +991,6 @@ public class Program {
         
         return true;
     }
-    
-//    private static void listPods() {
-//        try {
-//            // List pods.
-//            ApiClient client = Config.defaultClient();
-//            Configuration.setDefaultApiClient(client);
-//
-//            CoreV1Api api = new CoreV1Api();
-//            V1PodList pods = api.listPodForAllNamespaces().execute();
-//
-//            gui.getOutputTextArea().setText("");
-//
-//            for (V1Pod podEl : pods.getItems()) {
-//                out(gui.getOutputTextArea().getText()
-//                        + podEl.getMetadata().getName());
-//            }
-//        } catch (IOException | ApiException ex) {
-//            out("Failed" + '\n' + ex.getMessage());
-//        }
-//    }
 
     private static boolean backupTypesense(StringBuilder builder) {
         // Initialize the Typesense client
@@ -1081,7 +1133,7 @@ public class Program {
         return true;
     }
 
-    private static void executeShellCommand(
+    private static ExecWatch executeShellCommand(
             String typesenseDataPodName,
             ByteArrayOutputStream outStream,
             ByteArrayOutputStream errStream,
@@ -1115,7 +1167,7 @@ public class Program {
             }
         };
         
-        kclient.pods().inNamespace("typesense")
+        return kclient.pods().inNamespace("typesense")
                 .withName(typesenseDataPodName)
                 .writingOutput(outStream)
                 .writingError(errStream)
@@ -1136,7 +1188,5 @@ public class Program {
         }
         
         return null;
-        
-//        return "typesense-agent-ssh";
     }
 }

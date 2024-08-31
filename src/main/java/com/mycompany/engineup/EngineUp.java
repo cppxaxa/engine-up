@@ -46,6 +46,7 @@ public class EngineUp extends javax.swing.JFrame {
         btnCheckHealthAfterPortForward = new javax.swing.JButton();
         btnGetCmdPortForward = new javax.swing.JButton();
         btnGetTsWebAppUrl = new javax.swing.JButton();
+        chkPortForward = new javax.swing.JCheckBox();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -120,6 +121,10 @@ public class EngineUp extends javax.swing.JFrame {
             }
         });
         jPanel1.add(btnGetTsWebAppUrl);
+
+        chkPortForward.setLabel("Enable Port Forward");
+        chkPortForward.setMaximumSize(new java.awt.Dimension(1000, 25));
+        jPanel1.add(chkPortForward);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -207,6 +212,7 @@ public class EngineUp extends javax.swing.JFrame {
     public javax.swing.JButton btnRestoreDb;
     public javax.swing.JButton btnSearchAfterPortForward;
     public javax.swing.JButton btnSearchSample;
+    public javax.swing.JCheckBox chkPortForward;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JTextArea outputTextArea;
