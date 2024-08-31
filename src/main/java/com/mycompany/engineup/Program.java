@@ -452,26 +452,43 @@ public class Program {
                     }
                 }
                 
-                try (KubernetesClient kclient = new KubernetesClientBuilder()
-                        .build()) {
-                    
-                    out("Creating typesense-agent-ssh server");
-                    
-                    // Create the file from project resources.
-                    ClassLoader classLoader = Thread.currentThread()
-                            .getContextClassLoader();
+                boolean typesenseAgentCreated = false;
+                
+                while (!typesenseAgentCreated) {
+                    try (KubernetesClient kclient = new KubernetesClientBuilder()
+                            .build()) {
 
-//                    kclient.load(classLoader
-//                            .getResourceAsStream("typesense-agent-ssh.yml"))
-//                            .inNamespace("typesense").create();
-                    
-                    KubernetesHelper helper = new KubernetesHelper(kclient);
-                    java.io.InputStream yamlStream = classLoader
-                            .getResourceAsStream("typesense-agent-ssh.yml");
+                        out("Creating typesense-agent-ssh server");
 
-                    helper.apply(yamlStream);
-                    
-                    out("Created typesense-agent-ssh server");
+                        // Create the file from project resources.
+                        ClassLoader classLoader = Thread.currentThread()
+                                .getContextClassLoader();
+
+    //                    kclient.load(classLoader
+    //                            .getResourceAsStream("typesense-agent-ssh.yml"))
+    //                            .inNamespace("typesense").create();
+
+                        KubernetesHelper helper = new KubernetesHelper(kclient);
+                        java.io.InputStream yamlStream = classLoader
+                                .getResourceAsStream("typesense-agent-ssh.yml");
+
+                        helper.apply(yamlStream);
+
+                        typesenseAgentCreated = true;
+                        
+                        out("Created typesense-agent-ssh server");
+                    }
+                    catch (KubernetesClientException ex) {
+                        out("Retryable k8s error, " + ex.getMessage());
+                        
+                        try {
+                            out("Waiting...");
+                            Thread.sleep(1000);
+                        }
+                        catch (InterruptedException ex1) {
+                            out("Thread sleep failure, " + ex1.getMessage());
+                        }
+                    }
                 }
                 
                 // Check if typesense-agent-ssh started completely.
@@ -582,97 +599,37 @@ public class Program {
                     out("Deleted typesense-agent-ssh server");
                 }
                 
-//                try (KubernetesClient kclient = new KubernetesClientBuilder()
-//                        .build()) {
-//                    
-//                    out("Creating typesense server");
-//                    
-//                    // Create the file from project resources.
-//                    ClassLoader classLoader = Thread.currentThread()
-//                            .getContextClassLoader();
-//
-//                    kclient.load(classLoader
-//                            .getResourceAsStream("typesense.yml"))
-//                            .inNamespace("typesense").create();
-//                    
-//                    out("Created typesense server");
-//                }
-                
-                // TODO(pxaxa): Typesense DB restore.
-                // Bring down typesense DB if up.
-                // Deploy the typesense-agent-ssh.
-                // Upload the tsbak.tar file.
-                // Extract teh typsense-agent-ssh.
-                // Delete the typesense-agent-ssh.
-                
                 // Install typesense.
-                // Is typesense accessible.
-                builder = new StringBuilder();
-                boolean typesenseConnected = checkTypesense(builder);
-                out(builder.toString());
-
-                if (!typesenseConnected) {
-                    boolean connectionSuccess = checkKubectlConnection();
-
-                    if (!connectionSuccess) {
-                        out(manKubectlConnection());
-                        return;
+                installTypesenseWrapper();
+                
+                out("Checking health ...");
+                
+                boolean isHealthy = false;
+                
+                for (int i = 0; (i < 20 && !isHealthy); i++) {
+                    try (PortForward portForward = portForwardTypesense()) {
+                        // Is typesense accessible.
+                        builder = new StringBuilder();
+                        isHealthy = checkTypesense(builder);
+                        out(builder.toString());
+                        out("Health check: " + isHealthy);
                     }
-
-                    boolean portForwardTestSuccess = checkPortForwardPossible();
-
-                    if (!portForwardTestSuccess) {
-                        out("Port forward test failure.");
-                        out(installTypesense());
-                    }
-
-                    boolean typesenseNamespaceFound =
-                            checkTypesenseNamespacePresent();
-
-                    if (!typesenseNamespaceFound) {
-                        out("typesense namespace not found.");
-                        out(installTypesense());
-                    }
-
-                    while (!typesenseConnected) {
-                        out("Waiting 500 millis ...");
+                    catch (Exception ex) {
+                        out("Retryable error, " + ex.getClass() + ", "
+                                + ex.getMessage());
+                        
+                        out("Waiting ...");
                         
                         try {
-                            Thread.sleep(500);
-                        } catch (InterruptedException ex) {
-                            out("Thread sleep failed, " + ex.getMessage());
+                            Thread.sleep(1000);
                         }
-
-                        try (PortForward pF = portForwardTypesense()) {
-                            builder = new StringBuilder();
-                            typesenseConnected = checkTypesense(builder);
-                            out(builder.toString());
-                        }
-                        catch (EngineUpException | IOException
-                                | KubernetesClientException ex) {
-
-                            out("Port forward failure, " + ex.getClass() + ", "
-                                    + ex.getMessage());
+                        catch (InterruptedException ex1) {
+                            out("Thread sleep failed, " + ex1.getMessage());
                         }
                     }
                 }
-
-                try (PortForward portForward = portForwardTypesense()) {
-                    String q = "stark";
-                    org.typesense.model.SearchParameters searchParams =
-                            makeQueryParam(q);
-
-                    out(serializeSearchParams(searchParams));
-
-                    org.typesense.model.SearchResult searchResults =
-                            searchText(searchParams);
-
-                    out(serializeSearchResult(searchResults));
-                }
-                catch (Exception ex) {
-                    out("Exception occurred, " + ex.getClass() + ", "
-                            + ex.getMessage());
-                }
+                
+                out("Completed restoring DB");
             }
             
             @Override
@@ -874,6 +831,30 @@ public class Program {
         return builder.toString();
     }
 
+    private static String installTypesenseWrapper() {
+        while (true) {
+            try {
+                String response = installTypesense();
+                
+                out(response);
+                out("Install typesense wrapper completed");
+                
+                return response;
+            }
+            catch (KubernetesClientException ex) {
+                out("Retryable error in typesense installation, "
+                        + ex.getMessage());
+                try {
+                    out("Waiting ...");
+                    Thread.sleep(500);
+                }
+                catch (InterruptedException ex1) {
+                    out("Thread sleep failed, " + ex1.getMessage());
+                }
+            }
+        }
+    }
+    
     private static String installTypesense() {
         try {
             StringBuilder builder = new StringBuilder();
