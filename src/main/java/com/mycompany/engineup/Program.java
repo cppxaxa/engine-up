@@ -23,10 +23,11 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.time.Duration;
 import java.util.*;
+import javax.swing.UIManager;
 import org.typesense.api.Client;
 
 public class Program {
-
+    
     private final static EngineUp gui = new EngineUp();
     private static PortForward typesensePortForward = null;
     
@@ -305,6 +306,11 @@ public class Program {
             public void bl() {
                 out("Starting ...");
                 
+                if (gui.chkPortForward.isSelected()) {
+                    out("Disabling port forwarding");
+                    gui.chkPortForward.setSelected(false);
+                }
+                
                 // Is typesense accessible.
                 StringBuilder builder = new StringBuilder();
                 boolean typesenseConnected = checkTypesense(builder);
@@ -391,6 +397,11 @@ public class Program {
 
             private void bl() {
                 out("Starting ...");
+                
+                if (gui.chkPortForward.isSelected()) {
+                    out("Disabling port forwarding");
+                    gui.chkPortForward.setSelected(false);
+                }
                 
                 StringBuilder builder = new StringBuilder();
                 
