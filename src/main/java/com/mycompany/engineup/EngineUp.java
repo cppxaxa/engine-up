@@ -36,16 +36,12 @@ public class EngineUp extends javax.swing.JFrame {
         jScrollPane1 = new javax.swing.JScrollPane();
         outputTextArea = new javax.swing.JTextArea();
         jPanel1 = new javax.swing.JPanel();
-        btnSearchAfterPortForward = new javax.swing.JButton();
         btnSearchSample = new javax.swing.JButton();
         btnBackupDb = new javax.swing.JButton();
-        btnBackupAfterPortForward = new javax.swing.JButton();
         btnInstallDb = new javax.swing.JButton();
         btnRestoreDb = new javax.swing.JButton();
         btnCheckHealth = new javax.swing.JButton();
-        btnCheckHealthAfterPortForward = new javax.swing.JButton();
-        btnGetCmdPortForward = new javax.swing.JButton();
-        btnGetTsWebAppUrl = new javax.swing.JButton();
+        btnOpenTypesenseClient = new javax.swing.JButton();
         chkPortForward = new javax.swing.JCheckBox();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
@@ -62,31 +58,28 @@ public class EngineUp extends javax.swing.JFrame {
         jPanel1.setPreferredSize(new java.awt.Dimension(300, 100));
         jPanel1.setLayout(new javax.swing.BoxLayout(jPanel1, javax.swing.BoxLayout.Y_AXIS));
 
-        btnSearchAfterPortForward.setText("Search With Port Forward");
-        btnSearchAfterPortForward.setMaximumSize(new java.awt.Dimension(10000, 25));
-        jPanel1.add(btnSearchAfterPortForward);
-
         btnSearchSample.setLabel("Search Sample");
         btnSearchSample.setMaximumSize(new java.awt.Dimension(10000, 25));
         jPanel1.add(btnSearchSample);
 
-        btnBackupDb.setLabel("Backup DB");
+        btnBackupDb.setText("Backup DB (PF)");
         btnBackupDb.setMaximumSize(new java.awt.Dimension(10000, 25));
         jPanel1.add(btnBackupDb);
 
-        btnBackupAfterPortForward.setText("Backup DB With Port Forward");
-        btnBackupAfterPortForward.setMaximumSize(new java.awt.Dimension(10000, 25));
-        jPanel1.add(btnBackupAfterPortForward);
-
-        btnInstallDb.setLabel("Install DB");
+        btnInstallDb.setText("Install Typesense");
         btnInstallDb.setMaximumSize(new java.awt.Dimension(10000, 25));
+        btnInstallDb.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnInstallDbActionPerformed(evt);
+            }
+        });
         jPanel1.add(btnInstallDb);
 
         btnRestoreDb.setText("Restore DB");
         btnRestoreDb.setMaximumSize(new java.awt.Dimension(10000, 25));
         jPanel1.add(btnRestoreDb);
 
-        btnCheckHealth.setText("Check Health");
+        btnCheckHealth.setText("Check Health (PF)");
         btnCheckHealth.setMaximumSize(new java.awt.Dimension(10000, 25));
         btnCheckHealth.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -95,32 +88,14 @@ public class EngineUp extends javax.swing.JFrame {
         });
         jPanel1.add(btnCheckHealth);
 
-        btnCheckHealthAfterPortForward.setText("Check Health With Port Forward");
-        btnCheckHealthAfterPortForward.setMaximumSize(new java.awt.Dimension(10000, 25));
-        btnCheckHealthAfterPortForward.addActionListener(new java.awt.event.ActionListener() {
+        btnOpenTypesenseClient.setText("Open Typesense client (PF)");
+        btnOpenTypesenseClient.setMaximumSize(new java.awt.Dimension(10000, 25));
+        btnOpenTypesenseClient.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnCheckHealthAfterPortForwardActionPerformed(evt);
+                btnOpenTypesenseClientActionPerformed(evt);
             }
         });
-        jPanel1.add(btnCheckHealthAfterPortForward);
-
-        btnGetCmdPortForward.setText("Get Cmd TS Port Porward");
-        btnGetCmdPortForward.setMaximumSize(new java.awt.Dimension(10000, 25));
-        btnGetCmdPortForward.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnGetCmdPortForwardActionPerformed(evt);
-            }
-        });
-        jPanel1.add(btnGetCmdPortForward);
-
-        btnGetTsWebAppUrl.setText("Get TS webapp URL");
-        btnGetTsWebAppUrl.setMaximumSize(new java.awt.Dimension(10000, 25));
-        btnGetTsWebAppUrl.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnGetTsWebAppUrlActionPerformed(evt);
-            }
-        });
-        jPanel1.add(btnGetTsWebAppUrl);
+        jPanel1.add(btnOpenTypesenseClient);
 
         chkPortForward.setLabel("Enable Port Forward");
         chkPortForward.setMaximumSize(new java.awt.Dimension(1000, 25));
@@ -154,17 +129,13 @@ public class EngineUp extends javax.swing.JFrame {
         // TODO add your handling code here:
     }//GEN-LAST:event_btnCheckHealthActionPerformed
 
-    private void btnCheckHealthAfterPortForwardActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCheckHealthAfterPortForwardActionPerformed
+    private void btnOpenTypesenseClientActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnOpenTypesenseClientActionPerformed
         // TODO add your handling code here:
-    }//GEN-LAST:event_btnCheckHealthAfterPortForwardActionPerformed
+    }//GEN-LAST:event_btnOpenTypesenseClientActionPerformed
 
-    private void btnGetCmdPortForwardActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnGetCmdPortForwardActionPerformed
+    private void btnInstallDbActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnInstallDbActionPerformed
         // TODO add your handling code here:
-    }//GEN-LAST:event_btnGetCmdPortForwardActionPerformed
-
-    private void btnGetTsWebAppUrlActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnGetTsWebAppUrlActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_btnGetTsWebAppUrlActionPerformed
+    }//GEN-LAST:event_btnInstallDbActionPerformed
 
     /**
      * @param args the command line arguments
@@ -202,15 +173,11 @@ public class EngineUp extends javax.swing.JFrame {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    public javax.swing.JButton btnBackupAfterPortForward;
     public javax.swing.JButton btnBackupDb;
     public javax.swing.JButton btnCheckHealth;
-    public javax.swing.JButton btnCheckHealthAfterPortForward;
-    public javax.swing.JButton btnGetCmdPortForward;
-    public javax.swing.JButton btnGetTsWebAppUrl;
     public javax.swing.JButton btnInstallDb;
+    public javax.swing.JButton btnOpenTypesenseClient;
     public javax.swing.JButton btnRestoreDb;
-    public javax.swing.JButton btnSearchAfterPortForward;
     public javax.swing.JButton btnSearchSample;
     public javax.swing.JCheckBox chkPortForward;
     private javax.swing.JPanel jPanel1;

@@ -69,41 +69,41 @@ public class Program {
             
         });        
         
-        gui.btnSearchAfterPortForward.addActionListener(new ActionListener() {
-
-            private void bl() {
-                out("Starting ...");
-                
-                try (PortForward portForward = portForwardTypesense()) {
-                    String q = "stark";
-                    org.typesense.model.SearchParameters searchParams =
-                            makeQueryParam(q);
-
-                    out(serializeSearchParams(searchParams));
-
-                    org.typesense.model.SearchResult searchResults =
-                            searchText(searchParams);
-
-                    out(serializeSearchResult(searchResults));
-                }
-                catch (Exception ex) {
-                    out("Exception occurred, " + ex.getClass() + ", "
-                            + ex.getMessage());
-                }
-            }
-            
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                new Thread(new Runnable() {
-
-                    @Override
-                    public void run() {
-                        bl();
-                    }
-                }).start();
-            }
-            
-        });
+//        gui.btnSearchAfterPortForward.addActionListener(new ActionListener() {
+//
+//            private void bl() {
+//                out("Starting ...");
+//                
+//                try (PortForward portForward = portForwardTypesense()) {
+//                    String q = "stark";
+//                    org.typesense.model.SearchParameters searchParams =
+//                            makeQueryParam(q);
+//
+//                    out(serializeSearchParams(searchParams));
+//
+//                    org.typesense.model.SearchResult searchResults =
+//                            searchText(searchParams);
+//
+//                    out(serializeSearchResult(searchResults));
+//                }
+//                catch (Exception ex) {
+//                    out("Exception occurred, " + ex.getClass() + ", "
+//                            + ex.getMessage());
+//                }
+//            }
+//            
+//            @Override
+//            public void actionPerformed(ActionEvent e) {
+//                new Thread(new Runnable() {
+//
+//                    @Override
+//                    public void run() {
+//                        bl();
+//                    }
+//                }).start();
+//            }
+//            
+//        });
         
         gui.btnCheckHealth.addActionListener(new ActionListener() {
 
@@ -130,37 +130,37 @@ public class Program {
             
         });
         
-        gui.btnCheckHealthAfterPortForward
-                .addActionListener(new ActionListener() {
-
-            public void bl() {
-                out("Starting ...");
-                
-                try (PortForward portForward = portForwardTypesense()) {
-                    // Is typesense accessible.
-                    StringBuilder builder = new StringBuilder();
-                    boolean typesenseConnected = checkTypesense(builder);
-                    out(builder.toString());
-                    out("Action result: " + typesenseConnected);
-                }
-                catch (Exception ex) {
-                    out("Exception occurred, " + ex.getClass() + ", "
-                            + ex.getMessage());
-                }
-            }
-            
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                new Thread(new Runnable() {
-
-                    @Override
-                    public void run() {
-                        bl();
-                    }
-                }).start();
-            }
-            
-        });
+//        gui.btnCheckHealthAfterPortForward
+//                .addActionListener(new ActionListener() {
+//
+//            public void bl() {
+//                out("Starting ...");
+//                
+//                try (PortForward portForward = portForwardTypesense()) {
+//                    // Is typesense accessible.
+//                    StringBuilder builder = new StringBuilder();
+//                    boolean typesenseConnected = checkTypesense(builder);
+//                    out(builder.toString());
+//                    out("Action result: " + typesenseConnected);
+//                }
+//                catch (Exception ex) {
+//                    out("Exception occurred, " + ex.getClass() + ", "
+//                            + ex.getMessage());
+//                }
+//            }
+//            
+//            @Override
+//            public void actionPerformed(ActionEvent e) {
+//                new Thread(new Runnable() {
+//
+//                    @Override
+//                    public void run() {
+//                        bl();
+//                    }
+//                }).start();
+//            }
+//            
+//        });
         
         gui.btnSearchSample.addActionListener(new ActionListener() {
 
@@ -248,55 +248,55 @@ public class Program {
             
         });
         
-        gui.btnBackupAfterPortForward.addActionListener(new ActionListener() {
-
-            public void bl() {
-                out("Starting ...");
-                
-                try (PortForward portForward = portForwardTypesense()) {
-                    StringBuilder builder = new StringBuilder();
-                    boolean success = checkTypesense(builder);
-                    out(builder.toString());
-                    
-                    if (success) {
-                        builder = new StringBuilder();
-                        success = backupTypesense(builder);
-                        out(builder.toString());
-                    }
-
-                    if (success) {
-                        builder = new StringBuilder();
-                        packBackupFile(builder);
-                        out(builder.toString());
-
-                        builder = new StringBuilder();
-                        String backupfilePath = pullBackupFile(builder);
-                        out(builder.toString());
-                        out("Backup file path: " + backupfilePath);
-
-                        builder = new StringBuilder();
-                        deleteRemoteBackup(builder);
-                        out(builder.toString());
-                    }
-                }
-                catch (Exception ex) {
-                    out("Exception occurred, " + ex.getClass() + ", "
-                            + ex.getMessage());
-                }
-            }
-            
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                new Thread(new Runnable() {
-
-                    @Override
-                    public void run() {
-                        bl();
-                    }
-                }).start();
-            }
-            
-        });
+//        gui.btnBackupAfterPortForward.addActionListener(new ActionListener() {
+//
+//            public void bl() {
+//                out("Starting ...");
+//                
+//                try (PortForward portForward = portForwardTypesense()) {
+//                    StringBuilder builder = new StringBuilder();
+//                    boolean success = checkTypesense(builder);
+//                    out(builder.toString());
+//                    
+//                    if (success) {
+//                        builder = new StringBuilder();
+//                        success = backupTypesense(builder);
+//                        out(builder.toString());
+//                    }
+//
+//                    if (success) {
+//                        builder = new StringBuilder();
+//                        packBackupFile(builder);
+//                        out(builder.toString());
+//
+//                        builder = new StringBuilder();
+//                        String backupfilePath = pullBackupFile(builder);
+//                        out(builder.toString());
+//                        out("Backup file path: " + backupfilePath);
+//
+//                        builder = new StringBuilder();
+//                        deleteRemoteBackup(builder);
+//                        out(builder.toString());
+//                    }
+//                }
+//                catch (Exception ex) {
+//                    out("Exception occurred, " + ex.getClass() + ", "
+//                            + ex.getMessage());
+//                }
+//            }
+//            
+//            @Override
+//            public void actionPerformed(ActionEvent e) {
+//                new Thread(new Runnable() {
+//
+//                    @Override
+//                    public void run() {
+//                        bl();
+//                    }
+//                }).start();
+//            }
+//            
+//        });
         
         gui.btnInstallDb.addActionListener(new ActionListener() {
 
@@ -581,17 +581,6 @@ public class Program {
                     out("\t" + item + " : " + outStream.toString());
                 }
                 
-//                outStream = new java.io.ByteArrayOutputStream();
-//                errStream = new java.io.ByteArrayOutputStream();
-//
-//                command = new String[] {
-//                    "rm", "-rf", "/data/*"
-//                };
-//                
-//                executeShellCommand(
-//                        "typesense-agent-ssh", outStream, errStream, builder,
-//                        command);
-                
                 // Copy the file to the typesense storage.
                 try (KubernetesClient kclient = new KubernetesClientBuilder()
                         .build()) {
@@ -716,24 +705,22 @@ public class Program {
             
         });
         
-        gui.btnGetCmdPortForward.addActionListener(new ActionListener() {
+        gui.btnOpenTypesenseClient.addActionListener(new ActionListener() {
 
             @Override
             public void actionPerformed(ActionEvent e) {
-                out("Cmd:");
-                out("kubectl port-forward svc/typesense-service 8108:8108 "
-                        + "-n typesense");
-            }
-            
-        });
-        
-        gui.btnGetTsWebAppUrl.addActionListener(new ActionListener() {
-
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                out("First, make sure the health of typesense is ok.");
-                out("Url:");
-                out("https://bfritscher.github.io/typesense-dashboard");
+                StringBuilder builder = new StringBuilder();
+                
+                out("Url: https://bfritscher.github.io/typesense-dashboard");
+                
+                if (checkTypesense(builder)) {
+                    openLink("https://bfritscher.github.io/typesense-dashboard");
+                }
+                else {
+                    out("Typesense is not healthy.");
+                }
+                
+                out(builder.toString());
             }
             
         });
@@ -1188,5 +1175,35 @@ public class Program {
         }
         
         return null;
+    }
+    
+    private static void openLink(String url) {
+        String myOS = System.getProperty("os.name").toLowerCase();
+        out("(Your operating system is: "+ myOS +")\n");
+
+        try {
+            if (java.awt.Desktop.isDesktopSupported()) { // Probably Windows
+                out(" -- Going with Desktop.browse ...");
+                java.awt.Desktop desktop = java.awt.Desktop.getDesktop();
+                desktop.browse(new java.net.URI(url));
+            }
+            else { // Definitely Non-windows
+                Runtime runtime = Runtime.getRuntime();
+                if(myOS.contains("mac")) { // Apples
+                    out(" -- Going on Apple with 'open'...");
+                    runtime.exec("open " + url);
+                } 
+                else if(myOS.contains("nix") || myOS.contains("nux")) { // Linux flavours 
+                    out(" -- Going on Linux with 'xdg-open'...");
+                    runtime.exec("xdg-open " + url);
+                }
+                else 
+                    out("I was unable/unwilling to launch a browser in your OS :( #SadFace");
+            }
+            out("\nThings have finished.\nI hope you're OK.");
+        }
+        catch(IOException | URISyntaxException eek) {
+            out("**Stuff wrongly: "+ eek.getMessage());
+        }
     }
 }

@@ -82,17 +82,6 @@
         <Property name="axis" type="int" value="1"/>
       </Layout>
       <SubComponents>
-        <Component class="javax.swing.JButton" name="btnSearchAfterPortForward">
-          <Properties>
-            <Property name="text" type="java.lang.String" value="Search With Port Forward"/>
-            <Property name="maximumSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
-              <Dimension value="[10000, 25]"/>
-            </Property>
-          </Properties>
-          <AuxValues>
-            <AuxValue name="JavaCodeGenerator_VariableModifier" type="java.lang.Integer" value="1"/>
-          </AuxValues>
-        </Component>
         <Component class="javax.swing.JButton" name="btnSearchSample">
           <Properties>
             <Property name="label" type="java.lang.String" value="Search Sample"/>
@@ -106,18 +95,7 @@
         </Component>
         <Component class="javax.swing.JButton" name="btnBackupDb">
           <Properties>
-            <Property name="label" type="java.lang.String" value="Backup DB"/>
-            <Property name="maximumSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
-              <Dimension value="[10000, 25]"/>
-            </Property>
-          </Properties>
-          <AuxValues>
-            <AuxValue name="JavaCodeGenerator_VariableModifier" type="java.lang.Integer" value="1"/>
-          </AuxValues>
-        </Component>
-        <Component class="javax.swing.JButton" name="btnBackupAfterPortForward">
-          <Properties>
-            <Property name="text" type="java.lang.String" value="Backup DB With Port Forward"/>
+            <Property name="text" type="java.lang.String" value="Backup DB (PF)"/>
             <Property name="maximumSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
               <Dimension value="[10000, 25]"/>
             </Property>
@@ -128,11 +106,14 @@
         </Component>
         <Component class="javax.swing.JButton" name="btnInstallDb">
           <Properties>
-            <Property name="label" type="java.lang.String" value="Install DB"/>
+            <Property name="text" type="java.lang.String" value="Install Typesense"/>
             <Property name="maximumSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
               <Dimension value="[10000, 25]"/>
             </Property>
           </Properties>
+          <Events>
+            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnInstallDbActionPerformed"/>
+          </Events>
           <AuxValues>
             <AuxValue name="JavaCodeGenerator_VariableModifier" type="java.lang.Integer" value="1"/>
           </AuxValues>
@@ -150,7 +131,7 @@
         </Component>
         <Component class="javax.swing.JButton" name="btnCheckHealth">
           <Properties>
-            <Property name="text" type="java.lang.String" value="Check Health"/>
+            <Property name="text" type="java.lang.String" value="Check Health (PF)"/>
             <Property name="maximumSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
               <Dimension value="[10000, 25]"/>
             </Property>
@@ -162,43 +143,15 @@
             <AuxValue name="JavaCodeGenerator_VariableModifier" type="java.lang.Integer" value="1"/>
           </AuxValues>
         </Component>
-        <Component class="javax.swing.JButton" name="btnCheckHealthAfterPortForward">
+        <Component class="javax.swing.JButton" name="btnOpenTypesenseClient">
           <Properties>
-            <Property name="text" type="java.lang.String" value="Check Health With Port Forward"/>
+            <Property name="text" type="java.lang.String" value="Open Typesense client (PF)"/>
             <Property name="maximumSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
               <Dimension value="[10000, 25]"/>
             </Property>
           </Properties>
           <Events>
-            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnCheckHealthAfterPortForwardActionPerformed"/>
-          </Events>
-          <AuxValues>
-            <AuxValue name="JavaCodeGenerator_VariableModifier" type="java.lang.Integer" value="1"/>
-          </AuxValues>
-        </Component>
-        <Component class="javax.swing.JButton" name="btnGetCmdPortForward">
-          <Properties>
-            <Property name="text" type="java.lang.String" value="Get Cmd TS Port Porward"/>
-            <Property name="maximumSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
-              <Dimension value="[10000, 25]"/>
-            </Property>
-          </Properties>
-          <Events>
-            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnGetCmdPortForwardActionPerformed"/>
-          </Events>
-          <AuxValues>
-            <AuxValue name="JavaCodeGenerator_VariableModifier" type="java.lang.Integer" value="1"/>
-          </AuxValues>
-        </Component>
-        <Component class="javax.swing.JButton" name="btnGetTsWebAppUrl">
-          <Properties>
-            <Property name="text" type="java.lang.String" value="Get TS webapp URL"/>
-            <Property name="maximumSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
-              <Dimension value="[10000, 25]"/>
-            </Property>
-          </Properties>
-          <Events>
-            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnGetTsWebAppUrlActionPerformed"/>
+            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnOpenTypesenseClientActionPerformed"/>
           </Events>
           <AuxValues>
             <AuxValue name="JavaCodeGenerator_VariableModifier" type="java.lang.Integer" value="1"/>
