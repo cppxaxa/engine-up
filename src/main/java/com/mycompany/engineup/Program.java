@@ -23,7 +23,6 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.time.Duration;
 import java.util.*;
-import javax.swing.UIManager;
 import org.typesense.api.Client;
 
 public class Program {
